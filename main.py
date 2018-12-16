@@ -22,7 +22,7 @@ with tf.device("/cpu:0"):
     global_episodes = tf.Variable(0, dtype=tf.int32)
     trainer = tf.train.AdamOptimizer(learning_rate=1e-4)
     master_net = AC_Network(env, 'global', None, None)
-    num_workers = 1 #multiprocessing.cpu_count()
+    num_workers = multiprocessing.cpu_count()
     workers = []
     for i in range(num_workers):
         workers.append(Worker(env, i, trainer, model_path, global_episodes, entropy_beta))

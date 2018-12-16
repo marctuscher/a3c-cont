@@ -32,7 +32,6 @@ class Worker():
             v_target.append(v_s_)
         v_target.reverse()
 
-        print("actions_shape: ", np.array(actions).shape)
         feed_dict = {self.local_net.target_v:v_target,
             self.local_net.inputs:observations,
             self.local_net.actions:actions,
@@ -46,7 +45,7 @@ class Worker():
             self.local_net.state_out,
             self.local_net.apply_grads],
             feed_dict=feed_dict)
-        return v_l / len(rollout),p_l / len(rollout),e_l / len(rollout), g_n,v_n
+        return v_l / len(observations),p_l / len(observations),e_l / len(observations), g_n,v_n
 
 
     def work(self, max_episode_length, gamma, sess, coord, saver):
@@ -114,7 +113,6 @@ class Worker():
                     summary.value.add(tag='Perf/Value', simple_value=float(mean_value))
                     summary.value.add(tag='Losses/Value Loss', simple_value=float(v_l))
                     summary.value.add(tag='Losses/Policy Loss', simple_value=float(p_l))
-                    summary.value.add(tag='Losses/Entropy', simple_value=float(e_l))
                     summary.value.add(tag='Losses/Grad Norm', simple_value=float(g_n))
                     summary.value.add(tag='Losses/Var Norm', simple_value=float(v_n))
                     self.summary_writer.add_summary(summary, episode_count)

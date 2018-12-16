@@ -52,9 +52,9 @@ class AC_Network():
                 self.value_loss = 0.5 *  tf.reduce_mean(tf.square(td))
 
                 log_prob = normal_dist.log_prob(self.actions)
-                exp_v = log_prob * td
+                exp_v = tf.reduce_mean(log_prob, axis=1) * td
                 self.entropy = normal_dist.entropy()
-                self.exp_v = entropy_beta * self.entropy + exp_v
+                self.exp_v = entropy_beta * tf.reduce_mean(self.entropy) + exp_v
                 self.policy_loss = 0.5 * tf.reduce_mean(-self.exp_v)
                 self.loss = self.value_loss + self.policy_loss
 

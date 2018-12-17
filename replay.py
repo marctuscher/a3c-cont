@@ -22,10 +22,10 @@ with tf.device("/cpu:0"):
 
         def play(self):
 
-            s = self.env.reset()
+            ob = self.env.reset()
             rnn_state = self.local_net.state_init
             while True:
-                ob = self.env.render()
+                self.env.render()
                 a, v, rnn_state = self.sess.run([self.local_net.a, self.local_net.v, self.local_net.state_out], {
                         self.local_net.inputs : [ob],
                         self.local_net.state_in[0]: rnn_state[0],
@@ -34,7 +34,7 @@ with tf.device("/cpu:0"):
                 ob, reward, done, info = self.env.step(a)
                 if done:
                     rnn_state = self.local_net.state_init
-                    env.reset()
+                    ob = env.reset()
                     
 
     guy = ReplayGuy()

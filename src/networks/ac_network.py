@@ -63,3 +63,14 @@ class AC_Network():
                 grads, self.grad_norms = tf.clip_by_global_norm(self.gradients, 20.0)
                 global_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'global')
                 self.apply_grads = trainer.apply_gradients(zip(grads, global_vars))
+
+    def save_ckpt(self,sess,saver):
+        print ("Saving Model!................................")
+        saver1 = tf.train.Saver(max_to_keep=5, name = self.scope  )
+        saver1.save(sess,'net/a3c.ckpt')
+        print ("Model saved!................................")
+
+    def load_ckpt(self,sess):
+        saver1 = tf.train.Saver(max_to_keep=5, name = self.scope  )
+        saver1.restore(sess, 'net/a3c.ckpt')
+        print("Model restored")

@@ -3,15 +3,17 @@ from src.utils import update_target_graph, discount
 import tensorflow as tf
 import numpy as np
 
+
 class Worker():
 
-    def __init__(self, env, worker_id, trainer, model_path, global_episodes, entropy_beta):
+    def __init__(self, env, worker_id, trainer, model_path, global_episodes,max_global_steps, entropy_beta):
         self.env = env
         self.name = "worker_"+ str(worker_id)
         self.worker_id = worker_id
         self.model_path = model_path
         self.trainer = trainer
         self.global_episodes = global_episodes
+        self.max_global_steps = max_global_steps
         self.increment = self.global_episodes.assign_add(1)
 
         self.episode_rewards = []
@@ -53,7 +55,7 @@ class Worker():
         episode_count = sess.run(self.global_episodes)
         total_steps = 0
         with sess.as_default(), sess.graph.as_default():
-            while not coord.should_stop():
+            while not coord.should_stop() and episode_count != self.max_global_steps:
                 sess.run(self.update_local_ops)
                 obs_buffer = []
                 reward_buffer = []

@@ -8,6 +8,7 @@ from src.worker import Worker
 import threading
 from time import sleep
 
+max_global_steps = 1000
 max_episode_length = 20
 gamma = .99
 entropy_beta = 0.01
@@ -25,17 +26,21 @@ with tf.device("/cpu:0"):
     num_workers = multiprocessing.cpu_count()
     workers = []
     for i in range(num_workers):
-        workers.append(Worker(env, i, trainer, model_path, global_episodes, entropy_beta))
+        workers.append(Worker(env, i, trainer, model_path, global_episodes, max_global_steps,entropy_beta))
     saver = tf.train.Saver(max_to_keep=5)
 
 with tf.Session() as sess:
-    coord = tf.train.Coordinator()
-    sess.run(tf.global_variables_initializer())
-    worker_threads = []
-    for worker in workers:
-        worker_work = lambda: worker.work(max_episode_length, gamma, sess, coord, saver)
-        t = threading.Thread(target=(worker_work))
-        t.start()
-        sleep(0.1)
-        worker_threads.append(t)
-    coord.join(worker_threads)
+    try:
+        coord = tf.train.Coordinator()
+        sess.run(tf.global_variables_initializer())
+        worker_threads = []
+        for worker in workers:
+            worker_work = lambda: worker.work(max_episode_length, gamma, sess, coord, saver)
+            t = threading.Thread(target=(worker_work))
+            t.start()
+            sleep(0.1)
+            worker_threads.append(t)
+        coord.join(worker_threads)
+    except:
+        print("Manual Training Exit - Try to save model")
+    master_net.save_ckpt(sess,saver)

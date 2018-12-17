@@ -8,7 +8,7 @@ from src.worker import Worker
 import threading
 from time import sleep
 
-max_global_steps = 1000
+max_global_steps = 15000
 max_episode_length = 20
 gamma = .99
 entropy_beta = 0.01

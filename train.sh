@@ -25,8 +25,8 @@ then
     if [ -d "net" ]; then
     mv net ~/old/$now/net/
     fi
-    if [ -d "train_logs" ]; then
-    mv train_logs ~/old/$now/train_logs
+    if [ -d "logs" ]; then
+    mv logs ~/old/$now/logs
     fi
     python main.py
 elif [ "$1" = "store" ];
@@ -48,8 +48,8 @@ then
     if [ -d "net" ]; then
     mv net ~/old/$now/net/
     fi
-    if [ -d "train_logs" ]; then
-    mv train_logs ~/old/$now/train_logs
+    if [ -d "logs" ]; then
+    mv logs ~/old/$now/logs
     fi   
 elif [ "$1" = "play" ];
 then
@@ -58,6 +58,6 @@ elif [ "$1" = "del" ];
 then
     rm -r log
     rm -r net
-    rm -r train_logs      
+    rm -r logs      
 fi  
 

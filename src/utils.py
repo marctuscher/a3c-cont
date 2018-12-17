@@ -2,6 +2,7 @@ from scipy.misc import imresize as resize
 import json
 import numpy as np
 import tensorflow as tf
+from scipy import signal
 
 
 def rgb2gray(screen):
@@ -16,6 +17,8 @@ def save_config(config_file, config_dict):
     with open(config_file, 'w') as fp:
         json.dump(config_dict, fp)
 
+def discount(x, gamma):
+    return signal.lfilter([1], [1, -gamma], x[::-1], axis=0)[::-1]
 
 def update_target_graph(from_scope, to_scope):
     from_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, from_scope)

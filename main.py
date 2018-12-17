@@ -8,7 +8,7 @@ from src.worker import Worker
 import threading
 from time import sleep
 
-max_episode_length = 300
+max_episode_length = 20
 gamma = .99
 entropy_beta = 0.01
 model_path = './model'
@@ -36,6 +36,6 @@ with tf.Session() as sess:
         worker_work = lambda: worker.work(max_episode_length, gamma, sess, coord, saver)
         t = threading.Thread(target=(worker_work))
         t.start()
-        sleep(0.2)
+        sleep(0.1)
         worker_threads.append(t)
     coord.join(worker_threads)

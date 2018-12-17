@@ -1,5 +1,5 @@
 from src.networks.ac_network import AC_Network
-from src.utils import update_target_graph
+from src.utils import update_target_graph, discount
 import tensorflow as tf
 import numpy as np
 
@@ -23,22 +23,23 @@ class Worker():
 
         self.update_local_ops = update_target_graph('global', self.name)
 
-    def train(self, observations, rewards, actions, sess, gamma, bootstrap_value):
-        self.summary_writer.add_graph(sess.graph)
-        v_target = []
-        v_s_ = bootstrap_value
-        for r in reversed(rewards):
-            v_s_ = r + gamma * v_s_
-            v_target.append(v_s_)
-        v_target.reverse()
+    def train(self, observations, rewards, actions, values, sess, gamma, bootstrap_value):
 
-        feed_dict = {self.local_net.target_v:v_target,
+
+        rewards_plus = np.asarray(rewards + [bootstrap_value])
+        discounted_rewards = discount(rewards_plus, gamma)[:-1]
+        value_plus = np.asarray(values + [bootstrap_value])
+        advs = np.array(rewards) + gamma * value_plus[1:] - value_plus[:-1]
+        advs = discount(advs, gamma)
+
+        feed_dict = {self.local_net.advantages:advs,
             self.local_net.inputs:observations,
             self.local_net.actions:actions,
+                     self.local_net.rewards: discounted_rewards,
             self.local_net.state_in[0]:self.batch_rnn_state[0],
             self.local_net.state_in[1]:self.batch_rnn_state[1]}
         v_l,p_l,e_l,g_n,v_n, self.batch_rnn_state,_ = sess.run([self.local_net.value_loss,
-            self.local_net.policy_loss,
+                                                                self.local_net.policy_loss,
             self.local_net.entropy,
             self.local_net.grad_norms,
             self.local_net.var_norms,
@@ -57,6 +58,7 @@ class Worker():
                 obs_buffer = []
                 reward_buffer = []
                 actions_buffer = []
+                values_buffer = []
 
                 episode_values = 0
                 episode_obs = []
@@ -73,26 +75,24 @@ class Worker():
                         self.local_net.state_in[0]: rnn_state[0],
                         self.local_net.state_in[1]: rnn_state[1]
                     })
-                    ob_, reward, done, info = self.env.step(a[0])
+                    ob_, reward, done, info = self.env.step(a)
+                    reward = reward / 10.0
                     obs_buffer.append(ob)
+                    values_buffer.append(v[0, 0])
                     reward_buffer.append(reward)
-                    actions_buffer.append(a[0])
-
-                    episode_values += v[0,0]
+                    actions_buffer.append(a)
+                    episode_values += v[0, 0]
                     episode_reward += reward
                     ob = ob_
                     total_steps += 1
                     episode_step_count += 1
 
                     if len(obs_buffer) == 30 and not done and episode_count != max_episode_length - 1:
-                        v_target = sess.run(self.local_net.v, {
-                            self.local_net.inputs: [ob],
-                            self.local_net.state_in[0]: rnn_state[0],
-                            self.local_net.state_in[1]: rnn_state[1]
-                        })
-                        v_l, p_l, e_l, g_n, v_n = self.train(obs_buffer, reward_buffer, actions_buffer, sess, gamma, v_target[0, 0])
+                        v1 = sess.run(self.local_net.v, {self.local_net.inputs: [ob], self.local_net.state_in[0]: rnn_state[0], self.local_net.state_in[1]: rnn_state[1]})
+                        v_l, p_l, e_l, g_n, v_n = self.train(obs_buffer, reward_buffer, actions_buffer, values_buffer, sess, gamma, v1[0, 0])
                         obs_buffer = []
                         reward_buffer = []
+                        values_buffer = []
                         actions_buffer = []
                         sess.run(self.update_local_ops)
                 self.episode_rewards.append(episode_reward)
@@ -100,7 +100,7 @@ class Worker():
                 self.episode_mean_values.append(episode_values / episode_step_count)
 
                 if len(obs_buffer) != 0:
-                    v_l, p_l, e_l, g_n, v_n = self.train(obs_buffer, reward_buffer, actions_buffer, sess, gamma, 0.0)
+                    v_l, p_l, e_l, g_n, v_n = self.train(obs_buffer, reward_buffer, actions_buffer, values_buffer,sess, gamma, 0.0)
 
                 if episode_count % 5 == 0 and episode_count != 0:
                     # not using np.mean would be faster

@@ -17,7 +17,7 @@ class AC_Network():
             self.advantages = tf.placeholder(tf.float32, [None])
             self.rewards = tf.placeholder(tf.float32, [None])
             self.inputs = tf.placeholder(tf.float32, [None, *self.env.observation_space.shape])
-            lstm_cell = tf.contrib.rnn.LSTMCell(256, state_is_tuple=True)
+            lstm_cell = tf.contrib.rnn.LSTMCell(128, state_is_tuple=True)
 
             c_init = np.zeros((1, lstm_cell.state_size.c), np.float32)
             h_init = np.zeros((1, lstm_cell.state_size.h), np.float32)
@@ -36,10 +36,10 @@ class AC_Network():
             )
             lstm_c, lstm_h = lstm_state
             self.state_out = (lstm_c[:1, :], lstm_h[:1, :])
-            rnn_out = tf.reshape(lstm_outputs, [-1, 256])
+            rnn_out = tf.reshape(lstm_outputs, [-1, 128])
 
             with tf.variable_scope('actor'):
-                hidden_policy_layer = slim.fully_connected(rnn_out, 128, tf.nn.relu)
+                hidden_policy_layer = slim.fully_connected(rnn_out, 256, tf.nn.relu)
                 mu = slim.fully_connected(hidden_policy_layer, self.env.action_space.shape[0], tf.nn.tanh)
                 sigma = slim.fully_connected(hidden_policy_layer, self.env.action_space.shape[0], tf.nn.softplus)
 
@@ -50,12 +50,12 @@ class AC_Network():
             normal_dist = tfp.distributions.MultivariateNormalDiag(mu, sigma)
             self.a = tf.clip_by_value(tf.squeeze(normal_dist.sample(1)), self.env.action_space.low, self.env.action_space.high)
             if self.scope != "global":
-                self.value_loss = 0.5 * tf.reduce_sum(tf.square(self.rewards - tf.squeeze(self.v)))
+                self.value_loss = tf.reduce_mean(tf.square(self.rewards - tf.squeeze(self.v)))
 
                 log_prob = normal_dist.log_prob(self.actions)
-                self.entropy = -normal_dist.entropy()
-                self.policy_loss = -tf.reduce_sum(log_prob * self.advantages)
-                self.loss = self.value_loss + self.policy_loss + self.entropy * entropy_beta
+                self.policy_loss = tf.reduce_mean(log_prob * self.advantages)
+                self.entropy = tf.reduce_mean(normal_dist.entropy())
+                self.loss = self.policy_loss - self.entropy * entropy_beta + self.value_loss * 0.5
 
                 local_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, self.scope)
                 self.gradients = tf.gradients(self.loss, local_vars)

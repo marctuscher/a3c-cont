@@ -78,7 +78,7 @@ class Worker():
                         self.local_net.state_in[1]: rnn_state[1]
                     })
                     ob_, reward, done, info = self.env.step(a)
-                    reward = reward / 10.0
+                    #reward = reward / 50.0
                     obs_buffer.append(ob)
                     values_buffer.append(v[0, 0])
                     reward_buffer.append(reward)

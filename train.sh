@@ -19,8 +19,8 @@ then
     mkdir $now
     fi
     cd ~/festium
-    if [ -d "log" ]; then
-    mv log ~/old/$now/log/
+    if [ -d "graph_log" ]; then
+    mv graph_log ~/old/$now/graph_log/
     fi
     if [ -d "net" ]; then
     mv net ~/old/$now/net/
@@ -42,8 +42,8 @@ then
     mkdir $now
     fi
     cd ~/festium
-    if [ -d "log" ]; then
-    mv log ~/old/$now/log/
+    if [ -d "graph_log" ]; then
+    mv graph_log ~/old/$now/graph_log/
     fi
     if [ -d "net" ]; then
     mv net ~/old/$now/net/
@@ -56,7 +56,7 @@ then
     python3 replay.py
 elif [ "$1" = "del" ];
 then
-    rm -r log
+    rm -r graph_log
     rm -r net
     rm -r logs      
 fi  

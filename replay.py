@@ -13,7 +13,7 @@ with tf.device("/cpu:0"):
 
         def __init__(self):
             self.env = env.unwrapped
-            self.local_net = AC_Network(env, 'global', None, None)
+            self.local_net = AC_Network(env, 'global',test_model_path, None, None)
             self.sess = tf.Session()
             tf.global_variables_initializer().run(session=self.sess)
             self.local_net.load_ckpt(self.sess)

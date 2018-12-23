@@ -13,11 +13,11 @@ with tf.device("/cpu:0"):
 
         def __init__(self):
             self.env = env.unwrapped
-            self.local_net = AC_Network(env, 'global', None, None)
+            self.local_net = AC_Network(env, 'global',test_model_path, None, None)
             self.sess = tf.Session()
             tf.global_variables_initializer().run(session=self.sess)
             self.local_net.load_ckpt(self.sess)
- 
+            self.step = 0
 
 
         def play(self):
@@ -25,6 +25,7 @@ with tf.device("/cpu:0"):
             ob = self.env.reset()
             rnn_state = self.local_net.state_init
             while True:
+                self.step += 1
                 self.env.render()
                 a, v, rnn_state = self.sess.run([self.local_net.a, self.local_net.v, self.local_net.state_out], {
                         self.local_net.inputs : [ob],
@@ -35,8 +36,11 @@ with tf.device("/cpu:0"):
                 if done:
                     rnn_state = self.local_net.state_init
                     ob = env.reset()
+                if self.step == 200:
+                    self.step=0
+                    break    
                     
 
     guy = ReplayGuy()
-
-    guy.play()
+    while True:
+        guy.play()

@@ -21,7 +21,7 @@ class Worker():
         self.episode_mean_values = []
 
         self.summary_writer = tf.summary.FileWriter("logs/train_" + str(self.worker_id))
-        self.local_net = AC_Network(self.env, self.name, self.trainer, entropy_beta)
+        self.local_net = AC_Network(self.env, self.name, self.model_path, self.trainer, entropy_beta)
 
         self.update_local_ops = update_target_graph('global', self.name)
 

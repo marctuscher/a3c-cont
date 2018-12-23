@@ -15,19 +15,14 @@ class Worker():
         self.global_episodes = global_episodes
         self.max_global_steps = max_global_steps
         self.increment = self.global_episodes.assign_add(1)
-
         self.episode_rewards = []
         self.episode_lengths = []
         self.episode_mean_values = []
-
         self.summary_writer = tf.summary.FileWriter("logs/train_" + str(self.worker_id))
         self.local_net = AC_Network(self.env, self.name, self.trainer, entropy_beta)
-
         self.update_local_ops = update_target_graph('global', self.name)
 
     def train(self, observations, rewards, actions, values, sess, gamma, bootstrap_value):
-
-
         rewards_plus = np.asarray(rewards + [bootstrap_value])
         discounted_rewards = discount(rewards_plus, gamma)[:-1]
         value_plus = np.asarray(values + [bootstrap_value])
@@ -37,15 +32,13 @@ class Worker():
         feed_dict = {self.local_net.advantages:advs,
             self.local_net.inputs:observations,
             self.local_net.actions:actions,
-                     self.local_net.rewards: discounted_rewards,
-            self.local_net.state_in[0]:self.batch_rnn_state[0],
-            self.local_net.state_in[1]:self.batch_rnn_state[1]}
-        v_l,p_l,e_l,g_n,v_n, self.batch_rnn_state,_ = sess.run([self.local_net.value_loss,
+            self.local_net.rewards: discounted_rewards,
+            }
+        v_l,p_l,e_l,g_n,v_n,_ = sess.run([self.local_net.value_loss,
                                                                 self.local_net.policy_loss,
             self.local_net.entropy,
             self.local_net.grad_norms,
             self.local_net.var_norms,
-            self.local_net.state_out,
             self.local_net.apply_grads],
             feed_dict=feed_dict)
         return v_l / len(observations),p_l / len(observations),e_l / len(observations), g_n,v_n
@@ -69,16 +62,12 @@ class Worker():
                 done = False
                 ob = self.env.reset()
                 episode_obs.append(ob)
-                rnn_state = self.local_net.state_init
-                self.batch_rnn_state = rnn_state
                 while not done:
-                    a, v, rnn_state = sess.run([self.local_net.a, self.local_net.v, self.local_net.state_out], {
+                    a, v = sess.run([self.local_net.a, self.local_net.v], {
                         self.local_net.inputs : [ob],
-                        self.local_net.state_in[0]: rnn_state[0],
-                        self.local_net.state_in[1]: rnn_state[1]
                     })
                     ob_, reward, done, info = self.env.step(a)
-                    #reward = reward / 50.0
+                    reward = reward / 10.0
                     obs_buffer.append(ob)
                     values_buffer.append(v[0, 0])
                     reward_buffer.append(reward)
@@ -90,7 +79,7 @@ class Worker():
                     episode_step_count += 1
 
                     if len(obs_buffer) == 30 and not done and episode_count != max_episode_length - 1:
-                        v1 = sess.run(self.local_net.v, {self.local_net.inputs: [ob], self.local_net.state_in[0]: rnn_state[0], self.local_net.state_in[1]: rnn_state[1]})
+                        v1 = sess.run(self.local_net.v, {self.local_net.inputs: [ob]})
                         v_l, p_l, e_l, g_n, v_n = self.train(obs_buffer, reward_buffer, actions_buffer, values_buffer, sess, gamma, v1[0, 0])
                         obs_buffer = []
                         reward_buffer = []

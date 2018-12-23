@@ -8,12 +8,13 @@ from src.worker import Worker
 import threading
 from time import sleep
 
-max_global_steps = 50000
+max_global_steps = 100000
 max_episode_length = 20
 gamma = .99
 entropy_beta = 0.01
 model_path = './model'
-env = gym.make("Reacher-v2")
+env = gym.make("InvertedPendulum-v2")
+env.frame_skip=4
 tf.reset_default_graph()
 
 if not os.path.exists(model_path):

@@ -6,10 +6,11 @@ import tensorflow_probability as tfp
 
 
 class AC_Network():
-    def __init__(self, env, scope, trainer, entropy_beta):
+    def __init__(self, env, scope,model_path, trainer, entropy_beta):
         self.env = env
         self.scope = scope
         self.trainer = trainer
+        self.model_path = model_path
 
 
         with tf.variable_scope(self.scope):
@@ -67,10 +68,10 @@ class AC_Network():
     def save_ckpt(self,sess,saver):
         print ("Saving Model!................................")
         saver1 = tf.train.Saver(max_to_keep=5, name = self.scope  )
-        saver1.save(sess,'net/a3c.ckpt')
+        saver1.save(sess,self.model_path )
         print ("Model saved!................................")
 
     def load_ckpt(self,sess):
         saver1 = tf.train.Saver(max_to_keep=5, name = self.scope  )
-        saver1.restore(sess, 'net/a3c.ckpt')
+        saver1.restore(sess, self.model_path )
         print("Model restored")

@@ -107,3 +107,4 @@ venv.bak/
 logs/
 net/
 model/
+graph_log/

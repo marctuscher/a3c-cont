@@ -57,7 +57,7 @@ class AC_Network():
                 log_prob = - normal_dist.log_prob(self.actions)
                 self.policy_loss = tf.reduce_mean(log_prob * self.advantages)
                 self.entropy = tf.reduce_mean(normal_dist.entropy())
-                self.loss =  self.policy_loss - self.entropy * entropy_beta + self.value_loss * 0.1
+                self.loss =  self.policy_loss - self.entropy * entropy_beta + self.value_loss * 0.4
 
                 local_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, self.scope)
                 self.gradients = tf.gradients(self.loss, local_vars)

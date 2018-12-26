@@ -10,10 +10,10 @@ from time import sleep
 import shutil
 from gym.envs.box2d import LunarLanderContinuous
 
-max_global_steps = 100000
+max_global_steps = 10000
 max_episode_length = 20
-gamma = .8
-entropy_beta = 0.001
+gamma = .99
+entropy_beta = 0.01
 model_path = './net/a3c.ckpt'
 output_graph = True
 graph_dir = './graph_log'

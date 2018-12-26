@@ -11,6 +11,7 @@ class AC_Network():
         self.scope = scope
         self.trainer = trainer
         self.model_path = model_path
+        self.initializer = tf.random_normal_initializer(0, 0.1)
 
 
         with tf.variable_scope(self.scope):
@@ -28,7 +29,7 @@ class AC_Network():
             h_in = tf.placeholder(tf.float32, [1, lstm_cell.state_size.h])
             self.state_in = (c_in, h_in)
 
-            hidden = slim.fully_connected(self.inputs ,256, activation_fn=tf.nn.relu)
+            hidden = slim.fully_connected(self.inputs , 64, activation_fn=tf.nn.relu,  weights_initializer=self.initializer)
             rnn_in = tf.expand_dims(hidden, [0])
             state_in = tf.contrib.rnn.LSTMStateTuple(c_in, h_in)
 
@@ -40,12 +41,12 @@ class AC_Network():
             rnn_out = tf.reshape(lstm_outputs, [-1, 128])
 
             with tf.variable_scope('actor'):
-                hidden_policy_layer = slim.fully_connected(rnn_out, 256, tf.nn.relu)
-                mu = slim.fully_connected(hidden_policy_layer, self.env.action_space.shape[0], tf.nn.tanh)
-                sigma = slim.fully_connected(hidden_policy_layer, self.env.action_space.shape[0], tf.nn.softplus)
+                hidden_policy_layer = slim.fully_connected(rnn_out, 256, tf.nn.relu, weights_initializer=self.initializer)
+                mu = slim.fully_connected(hidden_policy_layer, *self.env.action_space.shape, tf.nn.tanh, weights_initializer=self.initializer)
+                sigma = slim.fully_connected(hidden_policy_layer, *self.env.action_space.shape, tf.nn.softplus,  weights_initializer=self.initializer)
 
             with tf.variable_scope('critic'):
-                hidden_value_layer = slim.fully_connected(rnn_out, 128, tf.nn.relu)
+                hidden_value_layer = slim.fully_connected(rnn_out, 128, tf.nn.relu,  weights_initializer=self.initializer)
                 self.v = slim.fully_connected(hidden_value_layer, 1, activation_fn=None)
 
             normal_dist = tfp.distributions.MultivariateNormalDiag(mu, sigma)
@@ -53,10 +54,10 @@ class AC_Network():
             if self.scope != "global":
                 self.value_loss = tf.reduce_mean(tf.square(self.rewards - tf.squeeze(self.v)))
 
-                log_prob = normal_dist.log_prob(self.actions)
+                log_prob = - normal_dist.log_prob(self.actions)
                 self.policy_loss = tf.reduce_mean(log_prob * self.advantages)
                 self.entropy = tf.reduce_mean(normal_dist.entropy())
-                self.loss = self.policy_loss - self.entropy * entropy_beta + self.value_loss * 0.5
+                self.loss =  self.policy_loss - self.entropy * entropy_beta + self.value_loss * 0.05
 
                 local_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, self.scope)
                 self.gradients = tf.gradients(self.loss, local_vars)

@@ -10,7 +10,7 @@ from time import sleep
 import shutil
 from gym.envs.box2d import LunarLanderContinuous
 
-max_global_steps = 200000
+max_global_steps = 300000
 max_episode_length = 20
 gamma = .99
 
@@ -49,6 +49,6 @@ with tf.Session() as sess:
             sleep(0.1)
             worker_threads.append(t)
         coord.join(worker_threads)
-    except Exception as e:
-        print(str(e) + " Try to save model")
+    except:
+        print("\nManual Training Exit - Try to save model")
     master_net.save_ckpt(sess,saver)

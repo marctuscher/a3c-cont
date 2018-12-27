@@ -6,7 +6,7 @@ import numpy as np
 
 class Worker():
 
-    def __init__(self, env, worker_id, trainer, model_path, global_episodes,max_global_steps, entropy_beta):
+    def __init__(self, env, worker_id, trainer, model_path, global_episodes,max_global_steps, entropy_beta, value_coeff):
         self.env = env
         self.name = "worker_"+ str(worker_id)
         self.worker_id = worker_id
@@ -21,7 +21,7 @@ class Worker():
         self.episode_mean_values = []
 
         self.summary_writer = tf.summary.FileWriter("logs/train_" + str(self.worker_id))
-        self.local_net = AC_Network(self.env, self.name, self.model_path, self.trainer, entropy_beta)
+        self.local_net = AC_Network(self.env, self.name, self.model_path, self.trainer, entropy_beta, value_coeff)
 
         self.update_local_ops = update_target_graph('global', self.name)
 

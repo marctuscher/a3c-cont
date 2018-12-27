@@ -6,7 +6,7 @@ import tensorflow_probability as tfp
 
 
 class AC_Network():
-    def __init__(self, env, scope,model_path, trainer, entropy_beta):
+    def __init__(self, env, scope,model_path, trainer, entropy_beta, value_coeff):
         self.env = env
         self.scope = scope
         self.trainer = trainer
@@ -57,7 +57,7 @@ class AC_Network():
                 log_prob = - normal_dist.log_prob(self.actions)
                 self.policy_loss = tf.reduce_mean(log_prob * self.advantages)
                 self.entropy = tf.reduce_mean(normal_dist.entropy())
-                self.loss =  self.policy_loss - self.entropy * entropy_beta + self.value_loss * 0.4
+                self.loss =  self.policy_loss - self.entropy * entropy_beta + self.value_loss * value_coeff
 
                 local_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, self.scope)
                 self.gradients = tf.gradients(self.loss, local_vars)

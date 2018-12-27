@@ -33,6 +33,7 @@ class Worker():
         value_plus = np.asarray(values + [bootstrap_value])
         advs = np.array(rewards) + gamma * value_plus[1:] - value_plus[:-1]
         advs = discount(advs, gamma)
+        self.img_sum  = self.AC.getImage()
 
         feed_dict = {self.local_net.advantages:advs,
             self.local_net.inputs:observations,
@@ -40,11 +41,12 @@ class Worker():
                      self.local_net.rewards: discounted_rewards,
             self.local_net.state_in[0]:self.batch_rnn_state[0],
             self.local_net.state_in[1]:self.batch_rnn_state[1]}
-        v_l,p_l,e_l,g_n,v_n, self.batch_rnn_state,_ = sess.run([self.local_net.value_loss,
+        v_l,p_l,e_l,g_n,v_n,self.img_summary, self.batch_rnn_state,_ = sess.run([self.local_net.value_loss,
                                                                 self.local_net.policy_loss,
             self.local_net.entropy,
             self.local_net.grad_norms,
             self.local_net.var_norms,
+            self.img_sum,
             self.local_net.state_out,
             self.local_net.apply_grads],
             feed_dict=feed_dict)
@@ -104,6 +106,7 @@ class Worker():
                     v_l, p_l, e_l, g_n, v_n = self.train(obs_buffer, reward_buffer, actions_buffer, values_buffer,sess, gamma, 0.0)
 
                 if episode_count % 5 == 0 and episode_count != 0:
+                    self.writer.add_summary(self.img_summary, episode_count)
                     # not using np.mean would be faster
                     mean_reward = np.mean(self.episode_rewards[-5:])
                     mean_length = np.mean(self.episode_lengths[-5:])

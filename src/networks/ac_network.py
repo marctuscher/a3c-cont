@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 import tensorflow_probability as tfp
-
+from src.utils import conv2d_layer
 
 
 class AC_Network():
@@ -19,7 +19,13 @@ class AC_Network():
             self.advantages = tf.placeholder(tf.float32, [None])
             self.rewards = tf.placeholder(tf.float32, [None])
             self.inputs = tf.placeholder(tf.float32, [None, *self.env.observation_space.shape])
-            lstm_cell = tf.contrib.rnn.LSTMCell(128, state_is_tuple=True)
+            lstm_cell = tf.contrib.rnn.LSTMCell(256, state_is_tuple=True)
+
+            w_init = tf.random_normal_initializer(0., .1)
+            _, _, conv, self.img_summary = conv2d_layer(self.inputs, 32, [8, 8], [4,4],summary_tag="relu_out", data_format="NHWC")
+            conv = tf.layers.conv2d(inputs=conv,activation=tf.nn.relu,reuse=tf.AUTO_REUSE,bias_initializer=tf.constant_initializer(0.0),filters=16, kernel_size=4, strides=2, padding='valid')
+            flattened = slim.flatten(conv)
+            hidden = slim.fully_connected(flattened, 128, activation_fn=tf.nn.elu)
 
             c_init = np.zeros((1, lstm_cell.state_size.c), np.float32)
             h_init = np.zeros((1, lstm_cell.state_size.h), np.float32)
@@ -29,7 +35,6 @@ class AC_Network():
             h_in = tf.placeholder(tf.float32, [1, lstm_cell.state_size.h])
             self.state_in = (c_in, h_in)
 
-            hidden = slim.fully_connected(self.inputs , 64, activation_fn=tf.nn.relu,  weights_initializer=self.initializer)
             rnn_in = tf.expand_dims(hidden, [0])
             state_in = tf.contrib.rnn.LSTMStateTuple(c_in, h_in)
 
@@ -38,7 +43,7 @@ class AC_Network():
             )
             lstm_c, lstm_h = lstm_state
             self.state_out = (lstm_c[:1, :], lstm_h[:1, :])
-            rnn_out = tf.reshape(lstm_outputs, [-1, 128])
+            rnn_out = tf.reshape(lstm_outputs, [-1, 256])
 
             with tf.variable_scope('actor'):
                 hidden_policy_layer = slim.fully_connected(rnn_out, 256, tf.nn.relu, weights_initializer=self.initializer)
@@ -65,6 +70,9 @@ class AC_Network():
                 grads, self.grad_norms = tf.clip_by_global_norm(self.gradients, 40.0)
                 global_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'global')
                 self.apply_grads = trainer.apply_gradients(zip(grads, global_vars))
+
+    def getImage(self):
+        return self.img_summary
 
     def save_ckpt(self,sess,saver):
         print ("Saving Model!................................")

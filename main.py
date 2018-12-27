@@ -13,6 +13,7 @@ from gym.envs.box2d import LunarLanderContinuous
 max_global_steps = 200000
 max_episode_length = 20
 gamma = .99
+
 entropy_beta = 0.005
 model_path = './net/a3c.ckpt'
 output_graph = True

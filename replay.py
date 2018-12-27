@@ -7,7 +7,7 @@ import gym
 
 with tf.device("/cpu:0"):
     test_model_path = 'net/a3c.ckpt'
-    env = gym.make("Reacher-v2")
+    env = gym.make("Festium-v2")
 
     class ReplayGuy():
 
@@ -36,7 +36,7 @@ with tf.device("/cpu:0"):
                 if done:
                     rnn_state = self.local_net.state_init
                     ob = env.reset()
-                if self.step == 200:
+                if self.step == 120:
                     self.step=0
                     break    
                     

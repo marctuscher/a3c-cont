@@ -38,8 +38,12 @@ with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         
         if resume == True:
-            print('Loading Model...')
-            saver.restore(sess,model_path) 
+            try:
+                print('Loading Model...')
+                saver.restore(sess,model_path)
+                print('Model loaded... \nContinue Training...')
+            except:
+                print('Couldnt find existing Model... \nStarting New Training-Process...')
 
         if output_graph:
             if os.path.exists(graph_dir):

@@ -10,13 +10,14 @@ from time import sleep
 import shutil
 from gym.envs.box2d import LunarLanderContinuous
 
-max_global_steps = 300000
+max_global_steps = 500000
 max_episode_length = 20
 gamma = .99
 
 entropy_beta = 0.005
 model_path = './net/a3c.ckpt'
 output_graph = True
+resume = True
 graph_dir = './graph_log'
 env = gym.make("Festium-v2")
 tf.reset_default_graph()
@@ -35,6 +36,10 @@ with tf.Session() as sess:
     try:
         coord = tf.train.Coordinator()
         sess.run(tf.global_variables_initializer())
+        
+        if resume == True:
+            print('Loading Model...')
+            saver.restore(sess,model_path) 
 
         if output_graph:
             if os.path.exists(graph_dir):

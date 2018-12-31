@@ -19,7 +19,7 @@ class AC_Network():
             self.advantages = tf.placeholder(tf.float32, [None])
             self.rewards = tf.placeholder(tf.float32, [None])
             self.inputs = tf.placeholder(tf.float32, [None, *self.env.observation_space.shape])
-            lstm_cell = tf.contrib.rnn.LSTMCell(128, state_is_tuple=True)
+            lstm_cell = tf.contrib.rnn.LSTMCell(256, state_is_tuple=True)
 
             c_init = np.zeros((1, lstm_cell.state_size.c), np.float32)
             h_init = np.zeros((1, lstm_cell.state_size.h), np.float32)
@@ -29,7 +29,7 @@ class AC_Network():
             h_in = tf.placeholder(tf.float32, [1, lstm_cell.state_size.h])
             self.state_in = (c_in, h_in)
 
-            hidden = slim.fully_connected(self.inputs , 64, activation_fn=tf.nn.relu,  weights_initializer=self.initializer)
+            hidden = slim.fully_connected(self.inputs , 256, activation_fn=tf.nn.relu,  weights_initializer=self.initializer)
             rnn_in = tf.expand_dims(hidden, [0])
             state_in = tf.contrib.rnn.LSTMStateTuple(c_in, h_in)
 
@@ -38,15 +38,15 @@ class AC_Network():
             )
             lstm_c, lstm_h = lstm_state
             self.state_out = (lstm_c[:1, :], lstm_h[:1, :])
-            rnn_out = tf.reshape(lstm_outputs, [-1, 128])
+            rnn_out = tf.reshape(lstm_outputs, [-1, 256])
 
             with tf.variable_scope('actor'):
-                hidden_policy_layer = slim.fully_connected(rnn_out, 256, tf.nn.relu, weights_initializer=self.initializer)
+                hidden_policy_layer = slim.fully_connected(rnn_out, 512, tf.nn.relu, weights_initializer=self.initializer)
                 mu = slim.fully_connected(hidden_policy_layer, *self.env.action_space.shape, tf.nn.tanh, weights_initializer=self.initializer)
                 sigma = slim.fully_connected(hidden_policy_layer, *self.env.action_space.shape, tf.nn.softplus,  weights_initializer=self.initializer)
 
             with tf.variable_scope('critic'):
-                hidden_value_layer = slim.fully_connected(rnn_out, 128, tf.nn.relu,  weights_initializer=self.initializer)
+                hidden_value_layer = slim.fully_connected(rnn_out, 256, tf.nn.relu,  weights_initializer=self.initializer)
                 self.v = slim.fully_connected(hidden_value_layer, 1, activation_fn=None)
 
             normal_dist = tfp.distributions.MultivariateNormalDiag(mu, sigma)

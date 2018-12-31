@@ -13,10 +13,10 @@ import gym
 
 max_global_steps = 200000
 max_episode_length = 100
-gamma = .8
+gamma = .99
 
 entropy_beta = 0.004
-value_coeff = 0.5
+value_coeff = 0.1
 model_path = './net/a3c.ckpt'
 output_graph = True
 graph_dir = './graph_log'
@@ -42,7 +42,7 @@ with tf.Session() as sess:
         if output_graph:
             if os.path.exists(graph_dir):
                 shutil.rmtree(graph_dir)
-            tf.summary.FileWriter(graph_dir, sess.graph)  
+            tf.summary.FileWriter(graph_dir, sess.graph)
 
         worker_threads = []
         for worker in workers:

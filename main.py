@@ -10,7 +10,7 @@ from time import sleep
 import shutil
 from gym.envs.box2d import LunarLanderContinuous
 
-max_global_steps = 500000
+max_global_steps = 1500000
 max_episode_length = 20
 gamma = .99
 
@@ -19,7 +19,8 @@ model_path = './net/a3c.ckpt'
 output_graph = True
 resume = True
 graph_dir = './graph_log'
-env = gym.make("Festium-v2")
+env = "Reacher-v2"
+environment = gym.make(env)
 tf.reset_default_graph()
 
 with tf.device("/cpu:0"):

@@ -2,12 +2,12 @@ import numpy as np
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 import tensorflow_probability as tfp
-
+import gmy
 
 
 class AC_Network():
     def __init__(self, env, scope,model_path, trainer, entropy_beta):
-        self.env = env
+        self.env = gym.make(env)
         self.scope = scope
         self.trainer = trainer
         self.model_path = model_path
@@ -57,7 +57,7 @@ class AC_Network():
                 log_prob = - normal_dist.log_prob(self.actions)
                 self.policy_loss = tf.reduce_mean(log_prob * self.advantages)
                 self.entropy = tf.reduce_mean(normal_dist.entropy())
-                self.loss =  self.policy_loss - self.entropy * entropy_beta + self.value_loss * 0.4
+                self.loss =  self.policy_loss - self.entropy * entropy_beta + self.value_loss * 0.3
 
                 local_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, self.scope)
                 self.gradients = tf.gradients(self.loss, local_vars)

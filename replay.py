@@ -36,7 +36,7 @@ with tf.device("/cpu:0"):
                 if done:
                     rnn_state = self.local_net.state_init
                     ob = env.reset()
-                if self.step == 120:
+                if self.step == 200:
                     self.step=0
                     break    
                     

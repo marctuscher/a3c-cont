@@ -2,12 +2,14 @@ from src.networks.ac_network import AC_Network
 from src.utils import update_target_graph, discount
 import tensorflow as tf
 import numpy as np
+import gym
 
 
 class Worker():
 
-    def __init__(self, env, worker_id, trainer, model_path, global_episodes,max_global_steps, entropy_beta, value_coeff):
-        self.env = env
+    def __init__(self, env_name, worker_id, trainer, model_path, global_episodes,max_global_steps, entropy_beta, value_coeff):
+        env = gym.make(env_name)
+        self.env = gym.wrappers.FlattenDictWrapper(env, dict_keys=["observation", "desired_goal"])
         self.name = "worker_"+ str(worker_id)
         self.worker_id = worker_id
         self.model_path = model_path
@@ -78,7 +80,7 @@ class Worker():
                         self.local_net.state_in[1]: rnn_state[1]
                     })
                     ob_, reward, done, info = self.env.step(a)
-                    reward /= 10.0
+                    
                     obs_buffer.append(ob)
                     values_buffer.append(v[0, 0])
                     reward_buffer.append(reward)

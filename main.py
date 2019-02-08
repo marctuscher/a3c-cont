@@ -20,18 +20,19 @@ value_coeff = 0.1
 model_path = './net/a3c.ckpt'
 output_graph = True
 graph_dir = './graph_log'
+env_name = "FetchReach-v1"
 env = gym.make("FetchReach-v1")
 env = gym.wrappers.FlattenDictWrapper(env, dict_keys=["observation", "desired_goal"])
 tf.reset_default_graph()
 
 with tf.device("/cpu:0"):
     global_episodes = tf.Variable(0, dtype=tf.int32)
-    trainer = tf.train.AdamOptimizer(learning_rate=1e-4)
+    trainer = tf.train.AdamOptimizer(learning_rate=1e-5)
     master_net = AC_Network(env, 'global',model_path, None, None, None)
     num_workers = multiprocessing.cpu_count()
     workers = []
     for i in range(num_workers):
-        workers.append(Worker(env, i, trainer, model_path, global_episodes, max_global_steps,entropy_beta, value_coeff))
+        workers.append(Worker(env_name, i, trainer, model_path, global_episodes, max_global_steps,entropy_beta, value_coeff))
     saver = tf.train.Saver(max_to_keep=5)
 
 with tf.Session() as sess:
